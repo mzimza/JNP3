@@ -36,9 +36,10 @@ INSTALLED_APPS = [
         'django.contrib.admin',
         'django.contrib.auth',
         'django.contrib.contenttypes',
-        'django.contrib.sessions',
+       # 'django.contrib.sessions',
         'django.contrib.messages',
         'django.contrib.staticfiles',
+	'mongoengine.django.sessions',
         'rest_framework_mongoengine',
         'tweety',
         ]
@@ -112,7 +113,6 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-
 #mongo
 #connect to mongoDB
 DATABASES = {
@@ -121,7 +121,7 @@ DATABASES = {
             }
         }
 
-#SESSION_ENGINE = 'mongoengine.django.sessions'
+SESSION_ENGINE = 'mongoengine.django.sessions'
 
 
 _MONGODB_HOST = 'localhost'
