@@ -33,45 +33,46 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-        'django.contrib.admin',
-        'django.contrib.auth',
-        'django.contrib.contenttypes',
-       # 'django.contrib.sessions',
-        'django.contrib.messages',
-        'django.contrib.staticfiles',
+	'django.contrib.admin',
+	'django.contrib.auth',
+	'django.contrib.contenttypes',
+	# 'django.contrib.sessions',
+	'django.contrib.messages',
+	'django.contrib.staticfiles',
 	'mongoengine.django.sessions',
-        'rest_framework_mongoengine',
-        'tweety',
-        ]
+	'rest_framework',
+	'rest_framework_mongoengine',
+	'tweety',
+]
 
 MIDDLEWARE_CLASSES = [
-        'django.middleware.security.SecurityMiddleware',
-        'django.contrib.sessions.middleware.SessionMiddleware',
-        'django.middleware.common.CommonMiddleware',
-        'django.middleware.csrf.CsrfViewMiddleware',
-        'django.contrib.auth.middleware.AuthenticationMiddleware',
-        'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
-        'django.contrib.messages.middleware.MessageMiddleware',
-        'django.middleware.clickjacking.XFrameOptionsMiddleware',
-        ]
+	'django.middleware.security.SecurityMiddleware',
+	'django.contrib.sessions.middleware.SessionMiddleware',
+	'django.middleware.common.CommonMiddleware',
+	'django.middleware.csrf.CsrfViewMiddleware',
+	'django.contrib.auth.middleware.AuthenticationMiddleware',
+	'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
+	'django.contrib.messages.middleware.MessageMiddleware',
+	'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
 
 ROOT_URLCONF = 'jnp3.urls'
 
 TEMPLATES = [
-        {
-            'BACKEND': 'django.template.backends.django.DjangoTemplates',
-            'DIRS': [],
-            'APP_DIRS': True,
-            'OPTIONS': {
-                'context_processors': [
-                    'django.template.context_processors.debug',
-                    'django.template.context_processors.request',
-                    'django.contrib.auth.context_processors.auth',
-                    'django.contrib.messages.context_processors.messages',
-                    ],
-                },
-            },
-        ]
+	{
+		'BACKEND': 'django.template.backends.django.DjangoTemplates',
+		'DIRS': [],
+		'APP_DIRS': True,
+		'OPTIONS': {
+			'context_processors': [
+				'django.template.context_processors.debug',
+				'django.template.context_processors.request',
+				'django.contrib.auth.context_processors.auth',
+				'django.contrib.messages.context_processors.messages',
+			],
+		},
+	},
+]
 
 WSGI_APPLICATION = 'jnp3.wsgi.application'
 
@@ -79,19 +80,19 @@ WSGI_APPLICATION = 'jnp3.wsgi.application'
 # https://docs.djangoproject.com/en/1.9/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-        {
-            'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-            },
-        {
-            'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-            },
-        {
-            'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-            },
-        {
-            'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-            },
-        ]
+	{
+		'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+	},
+	{
+		'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+	},
+	{
+		'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+	},
+	{
+		'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+	},
+]
 
 
 # Internationalization
@@ -113,13 +114,17 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+STATICFILES_DIRS = (
+	os.path.join(BASE_DIR, "static"),
+)
+
 #mongo
 #connect to mongoDB
 DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.dummy',
-            }
-        }
+	'default': {
+		'ENGINE': 'django.db.backends.dummy',
+	}
+}
 
 SESSION_ENGINE = 'mongoengine.django.sessions'
 
@@ -127,8 +132,14 @@ SESSION_ENGINE = 'mongoengine.django.sessions'
 _MONGODB_HOST = 'localhost'
 _MONGODB_NAME = 'tweety'
 
-conn = mongoengine.connect(_MONGODB_NAME, host=_MONGODB_HOST)
+mongoengine.connect(_MONGODB_NAME, host=_MONGODB_HOST)
 
 AUTHENTICATION_BACKENDS = (
-        'mongoengine.django.auth.MongoEngineBackend'
-        )
+	'mongoengine.django.auth.MongoEngineBackend'
+)
+
+REST_FRAMEWORK = {
+	'DEFAULT_PARSER_CLASSES': (
+		'rest_framework.parsers.JSONParser',
+	)
+}
