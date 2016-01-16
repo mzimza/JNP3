@@ -11,12 +11,10 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 
 import os
-import sys
 import mongoengine
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.9/howto/deployment/checklist/
@@ -28,7 +26,6 @@ SECRET_KEY = 'p3ws_1(9e$hei^ur-%qc-u4z()hzz+gmuktni0b8@34-6$7$8%'
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
 
 # Application definition
 
@@ -42,9 +39,12 @@ INSTALLED_APPS = [
 	'rest_framework',
 	'rest_framework_mongoengine',
 	'tweety',
+	'django_q',
+	'debug_toolbar'
 ]
 
 MIDDLEWARE_CLASSES = [
+	'debug_toolbar.middleware.DebugToolbarMiddleware',
 	'django.middleware.security.SecurityMiddleware',
 	'django.contrib.sessions.middleware.SessionMiddleware',
 	'django.middleware.common.CommonMiddleware',
@@ -93,7 +93,6 @@ AUTH_PASSWORD_VALIDATORS = [
 	},
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/1.9/topics/i18n/
 
@@ -107,7 +106,6 @@ USE_L10N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
 
@@ -117,25 +115,23 @@ STATICFILES_DIRS = (
 	os.path.join(BASE_DIR, "static"),
 )
 
-#mongo
-#connect to mongoDB
-#_MONGODB_HOST = 'localhost'
-#_MONGODB_NAME = 'tweety'
+# mongo
+# connect to mongoDB
+_MONGODB_HOST = 'localhost'
+_MONGODB_NAME = 'tweety_async'
 
-#mongoengine.connect(_MONGODB_NAME, host=_MONGODB_HOST)
+mongoengine.connect(_MONGODB_NAME, host=_MONGODB_HOST)
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'tweety',
-        'USER': 'tweety_admin',
-        'PASSWORD': 'tweety',
-        'HOST': 'localhost',
-        'PORT': '',
-    }
+	'default': {
+		'ENGINE': 'django.db.backends.postgresql_psycopg2',
+		'NAME': 'tweety',
+		'USER': 'tweety_admin',
+		'PASSWORD': 'tweety',
+		'HOST': 'localhost',
+		'PORT': '',
+	}
 }
-
-
 
 REST_FRAMEWORK = {
 	'DEFAULT_PARSER_CLASSES': (
@@ -145,7 +141,49 @@ REST_FRAMEWORK = {
 
 AUTHENTICATION_BACKENDS = (
 	'django.contrib.auth.backends.ModelBackend',
-    #'server.libs.facebook.FacebookBackend',
-    )
+	# 'server.libs.facebook.FacebookBackend',
+)
 
 AUTH_USER_MODEL = 'tweety.TweetyUser'
+
+# DJANGO-Q SETTINGS
+Q_CLUSTER = {
+	'name': 'tweety_async',
+	'workers': 4,
+	'recycle': 500,
+	'timeout': 60,
+	'compress': False,
+	'save_limit': 250,
+	'queue_limit': 500,
+	'cpu_affinity': 1,
+	'label': 'Django Q',
+	'redis': {
+		'host': '127.0.0.1',
+		'port': 6379,
+		'db': 0,}
+}
+
+
+# MEMCACHED
+CACHES = {
+		'default': {
+			'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+			'LOCATION': '127.0.0.1:11211',
+		}
+	}
+
+# DEBUG_TOOLBAR
+DEBUG_TOOLBAR_PANELS = [
+    'debug_toolbar.panels.versions.VersionsPanel',
+    'debug_toolbar.panels.timer.TimerPanel',
+    'debug_toolbar.panels.settings.SettingsPanel',
+    'debug_toolbar.panels.headers.HeadersPanel',
+    'debug_toolbar.panels.request.RequestPanel',
+    'debug_toolbar.panels.sql.SQLPanel',
+    'debug_toolbar.panels.staticfiles.StaticFilesPanel',
+    'debug_toolbar.panels.templates.TemplatesPanel',
+    'debug_toolbar.panels.cache.CachePanel',
+    'debug_toolbar.panels.signals.SignalsPanel',
+    'debug_toolbar.panels.logging.LoggingPanel',
+    'debug_toolbar.panels.redirects.RedirectsPanel',
+]

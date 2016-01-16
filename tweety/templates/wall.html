@@ -1,0 +1,217 @@
+{% extends 'base_template.html' %}
+
+{% block header %}
+{% load staticfiles %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="starter-template">
+        <div id="status"></div>
+        <div class="input-group" id="new-tweet">
+            <input type="text" class="form-control" placeholder="Tweet what you think" id="newTweetText">
+            <span class="input-group-button">
+                <button class="btn btn-secondary" type="button" id="publishTweet">Publish</button>
+            </span>
+        </div>
+         <div>
+            <table class="table" id="myTweets">
+                <thead class="thead-default">
+                <tr>
+                    <th class="id">Id</th>
+                    <th class="tweet">Tweet</th>
+                    <th class="likes">Likes</th>
+                    <th class="shares">Shares</th>
+                    <th class="share-tweet"></th>
+                    <th class="delete"></th>
+                </tr>
+                </thead>
+                <tbody id="tweetBody">
+                </tbody>
+        </div>
+    </div>
+</div><!-- /.container -->
+
+<script>
+
+    var host = document.location.host;
+    $(document).ready(function() {
+        showTweets(host, true);
+    });
+
+    $('table').on({
+        click: function(){
+            var tweet_id = $(this).parent().parent().find('.id').text();
+            $.ajax({
+                url: 'http://' + host + '/tweet/' + tweet_id + '/',
+                type: 'DELETE',
+                success: function(data){
+                    showTweets(host);
+                },
+                error: function(xhr, errmsg, err) {
+                    console.log(xhr, errmsg, err);
+                }
+            });
+        }
+    }, '.delete-tweet'
+    );
+
+    $('table').on({
+        click: function() {
+             var tweet_id = $(this).parent().find('.id').text();
+             console.log($(this).parent(), tweet_id);
+             $.ajax({
+                url: 'http://' + host + '/like/' + tweet_id + '/',
+                type: 'POST',
+                success: function(){
+                    var new_value = parseInt($('#'+tweet_id).find('.likes').text())  + 1;
+                    $('#'+tweet_id).find('.likes').text(new_value);
+                },
+                error: function(xhr, errmsg, err) {
+                    console.log(xhr, errmsg, err);
+                }
+            });
+        }
+    }, '.likes'
+    );
+
+     $('table').on({
+        click: function() {
+             var tweet_id = $(this).parent().parent().find('.id').text();
+             $.ajax({
+                url: 'http://' + host + '/retweet/' + tweet_id + '/',
+                type: 'POST',
+
+                success: function(){
+                    var new_value = parseInt($('#'+tweet_id).find('.shares').text())  + 1;
+                    $('#'+tweet_id).find('.shares').text(new_value);
+                },
+                error: function(xhr, errmsg, err) {
+                    console.log(xhr, errmsg, err);
+                }
+            });
+        }
+    }, '.share-tweet'
+    );
+
+    var addButtonCell = function (rowID, col_nr, type, show) {
+        if (show) {
+            var cell = rowID.insertCell(col_nr);
+            var btn = document.createElement("input");
+            btn.type = "button";
+            btn.name = type;
+            btn.value = type.charAt(0).toUpperCase() + type.slice(1);
+            var class = type + '-tweet';
+            btn.className="btn btn-danger btn-xs " + class;
+            cell.appendChild(btn);
+        }
+        else {
+            $(type).remove();
+        }
+    };
+
+
+    function addRow(tableID, data, show_delete, show_retweet) {
+        var tableRef = document.getElementById(tableID);
+        var newRow   = tableRef.insertRow();
+        newRow.id = data.id;
+        var idCell = newRow.insertCell(0);
+        idCell.className = 'id';
+        idCell.style.display = 'none';
+        idCell.appendChild(document.createTextNode(data.id));
+        var textCell = newRow.insertCell(1);
+        textCell.className = 'tweet';
+        textCell.appendChild(document.createTextNode(data.text));
+        var likesCell = newRow.insertCell(2);
+        likesCell.appendChild(document.createTextNode(data.likes));
+        likesCell.className = 'likes';
+        var sharesCell = newRow.insertCell(3);
+        sharesCell.className = 'shares';
+        sharesCell.appendChild(document.createTextNode(data.shares));
+
+   
+    };
+
+
+    var showTweets = function(host, show_delete) {
+    $.ajax({
+          url: 'http://' + host + '/wall/',
+          type: 'GET',
+          headers: {
+            'Content-Type' : 'application/json',
+          },
+          success: function(data) {
+            console.log(data);
+            $('#tweetBody').empty();
+            data.forEach(function(element, index){
+                addRow('tweetBody', element, show_delete);
+            });
+          },
+          error: function(xhr, errmsg, err) {
+            console.log(xhr, errmsg, err);
+          }
+    });
+   };
+
+
+   $('#publishTweet').on({
+         click: function() {
+         var tweet = $("#newTweetText").val();
+         var data = {'text' : tweet};
+         $.ajax({
+            url: 'http://' + host + '/tweet/',
+            type: 'POST',
+            headers: {
+                    'Content-Type': 'application/json',
+            },
+            data: JSON.stringify(data),
+            success: function() {
+                $("#newTweetText").val('');
+                showTweets(host, true);
+            },
+            error: function(xhr, errmsg, err) {
+                console.log(xhr, errmsg, err);
+            },
+         });
+
+        }
+    });
+
+         $('#home').on({
+            click: function() {
+                console.log("home");
+                $('#home').parent().find('li').each(function(){
+                    $(this).removeClass('active');
+                });
+                $('#home').addClass('active');
+                var host = document.location.host;
+                location.href='http://' + host + '/home/';
+            }
+      });
+
+    $('#popularTweets').on({
+        click: function() {
+            console.log("pop");
+            $('#popularTweets').parent().find('li').each(function(){
+                  $(this).removeClass('active');
+            });
+            $('#popularTweets').addClass('active');
+            $.ajax({
+            url: 'http://' + host + '/popular/',
+            type: 'GET',
+            success: function(data) {
+                $('#tweetBody').empty();
+                data.forEach(function(element, index){
+                    addRow('tweetBody', element, false);
+                });
+            },
+            error: function(xhr, errmsg, err) {
+                console.log(xhr, errmsg, err);
+            },
+         });
+
+        }
+    });
+
+</script>
+{% endblock %}

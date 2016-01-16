@@ -1,15 +1,32 @@
 
   // This is called with the results from from FB.getLoginStatus().
   function statusChangeCallback(response) {
-    console.log('statusChangeCallback');
-    console.log(response);
     // The response object is returned with a status field that lets the
     // app know the current login status of the person.
     // Full docs on the response object can be found in the documentation
     // for FB.getLoginStatus().
     if (response.status === 'connected') {
       // Logged into your app and Facebook.
-      testAPI();
+      var token = response.authResponse.accessToken;
+      var host = document.location.host;
+      console.log(host);
+      var data = {'token': token};
+      $.ajax({
+        url: 'http://' + host + '/user_fb/',
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        data: JSON.stringify(data),
+        success: function() {
+            location.href='http://' + host + '/home/';
+        },
+        error: function(xhr, errmsg, err) {
+            console.log(xhr);
+            console.log(errmsg);
+            console.log(err);
+        }
+      });
     } else if (response.status === 'not_authorized') {
       // The person is logged into Facebook, but not your app.
       document.getElementById('status').innerHTML = 'Please log ' +
@@ -37,7 +54,7 @@
     cookie     : true,  // enable cookies to allow the server to access
                         // the session
     xfbml      : true,  // parse social plugins on this page
-    version    : 'v2.2' // use version 2.2
+    version    : 'v2.5' // use version 2.2
   });
 
   // Now that we've initialized the JavaScript SDK, we call
@@ -74,8 +91,6 @@
     FB.api('/me', function(response) {
       console.log('Successful login for: ' + response.name);
       document.getElementById('status').innerHTML =
-        'You are logged in as, ' + response.name + '!';
-      var username = response.name;
-      document.getElementById('username').innerHTML = username.replace(/ /g,'');
+        'You are logged in as ' + response.name + '!';
     });
   }
