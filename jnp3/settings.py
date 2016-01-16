@@ -36,10 +36,9 @@ INSTALLED_APPS = [
 	'django.contrib.admin',
 	'django.contrib.auth',
 	'django.contrib.contenttypes',
-	# 'django.contrib.sessions',
+	'django.contrib.sessions',
 	'django.contrib.messages',
 	'django.contrib.staticfiles',
-	'mongoengine.django.sessions',
 	'rest_framework',
 	'rest_framework_mongoengine',
 	'tweety',
@@ -120,26 +119,33 @@ STATICFILES_DIRS = (
 
 #mongo
 #connect to mongoDB
+#_MONGODB_HOST = 'localhost'
+#_MONGODB_NAME = 'tweety'
+
+#mongoengine.connect(_MONGODB_NAME, host=_MONGODB_HOST)
+
 DATABASES = {
-	'default': {
-		'ENGINE': 'django.db.backends.dummy',
-	}
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'tweety',
+        'USER': 'tweety_admin',
+        'PASSWORD': 'tweety',
+        'HOST': 'localhost',
+        'PORT': '',
+    }
 }
 
-SESSION_ENGINE = 'mongoengine.django.sessions'
 
-
-_MONGODB_HOST = 'localhost'
-_MONGODB_NAME = 'tweety'
-
-mongoengine.connect(_MONGODB_NAME, host=_MONGODB_HOST)
-
-AUTHENTICATION_BACKENDS = (
-	'mongoengine.django.auth.MongoEngineBackend'
-)
 
 REST_FRAMEWORK = {
 	'DEFAULT_PARSER_CLASSES': (
 		'rest_framework.parsers.JSONParser',
 	)
 }
+
+AUTHENTICATION_BACKENDS = (
+	'django.contrib.auth.backends.ModelBackend',
+    #'server.libs.facebook.FacebookBackend',
+    )
+
+AUTH_USER_MODEL = 'tweety.TweetyUser'

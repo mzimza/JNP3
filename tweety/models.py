@@ -1,29 +1,20 @@
 from __future__ import unicode_literals
 
 from django.db import models
-from mongoengine import *
-from mongoengine.django.auth import User as mongoUser
-from datetime import datetime
+from django.contrib.auth.models import AbstractBaseUser
 
 
-class Tweet(Document):
-	text = StringField(max_length=160)
-	date = DateTimeField(default=datetime.now())
-	likes = IntField(default=0)
-	shares = IntField(default=0)
+class TweetyUser(AbstractBaseUser):
+	fb_id = models.BigIntegerField(default=0)
+	email = models.EmailField(unique=True)
+	first_name = models.CharField(max_length=30)
+	last_name = models.CharField(max_length=50)
+	date_joined = models.DateTimeField(auto_now_add=True)
+	is_active = models.BooleanField(default=True, null=False)
+	is_staff = models.BooleanField(default=False, null=False)
 
-	def to_dict(self):
-		from tweety.serializers import TweetSerializer
-		serializer = TweetSerializer(self)
-		return serializer.data
-
-
-class TweetyUser(mongoUser):
-	tweets = EmbeddedDocumentListField('Tweet')
-	fb_id = LongField(default=0)
-	email = EmailField(unique=True)
-	#followers = ListField(ReferenceField('TweetyUser', reverse_delete_rule=1))
-	#following = ListField(ReferenceField('TweetyUser', reverse_delete_rule=1))
+	USERNAME_FIELD = 'email'
+	REQUIRED_FIELDS = ['first_name', 'last_name']
 
 	def __unicode__(self):
 		return self.first_name + ' ' + self.last_name
@@ -31,4 +22,20 @@ class TweetyUser(mongoUser):
 	def to_dict(self):
 		from tweety.serializers import TweetyUserSerializer
 		serializer = TweetyUserSerializer(self)
+		return serializer.data
+
+	@property
+	def backend(self):
+		return 'django.contrib.auth.backends.ModelBackend'
+
+class Tweet(models.Model):
+	author = models.ForeignKey(TweetyUser)
+	text = models.TextField(max_length=160)
+	date = models.DateTimeField(auto_now_add=True)
+	likes = models.IntegerField(default=0)
+	shares = models.IntegerField(default=0)
+
+	def to_dict(self):
+		from tweety.serializers import TweetSerializer
+		serializer = TweetSerializer(self)
 		return serializer.data

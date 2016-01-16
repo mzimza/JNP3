@@ -22,6 +22,7 @@ urlpatterns = [
 	url(r'^$', views.home),
 	url(r'^admin/', admin.site.urls),
 	url(r'^test/', views.test),
-	url(r'^user/$', views.user2),
-	url(r'^user/(?P<id>[\w]+)/$', views.user),
+	url(r'^user/$', views.user_getpost, name="user"),
+	url(r'^user_fb/$', views.user_facebook, name="user_fb"),
+	url(r'^user/(?P<id>[\w]+)/$', views.user, name="user_id"),
 ]
