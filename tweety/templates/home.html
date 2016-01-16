@@ -27,13 +27,29 @@
 </nav>
 
 <div class="container">
-
     <div class="starter-template">
-        <h1>Bootstrap starter template</h1>
-        <p class="lead">Use this document as a way to quickly start any new project.<br> All you get is this text and a mostly barebones HTML document.</p>
-    </div>
+        <fb:login-button scope="public_profile,email" onlogin="checkLoginState();"></fb:login-button>
+        <div id="username" hidden></div>
+        <div id="status"></div>
+        <div class="input-group" id="new-tweet">
+            <input type="text" class="form-control" placeholder="Tweet what you think" id="newTweetText">
+            <span class="input-group-button">
+                <button class="btn btn-secondary" type="button" id="publishTweet">Publish</button>
+            </span>
+        </div>
 
+    </div>
 </div><!-- /.container -->
 
+<script>
+
+    $("#publishTweet").on({
+        click: function() {
+         console.log($("#newTweetText").val());
+         console.log($('#username').html() + 'posted');
+        }
+    });
+
+</script>
 
 {% endblock %}
