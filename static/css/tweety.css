@@ -23,19 +23,22 @@ table {
   margin-top: 10px;
 }
 th.likes, th.shares {
-  width: 15%;
+  width: 10%;
   text-align: center;
 }
-th.delete{
-    width: 10%;
+th.delete-tweet{
+    width: 20%;
+    text-align: center;
+}
+th.retweet-tweet {
+    width: 20%;
     text-align: center;
 }
 th.id {
-    width: 5%;
     text-align: center;
     display: none;
 }
 th.tweet {
-  width: 55%;
+  width: 40%;
   text-align: center;
 }

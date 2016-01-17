@@ -1,14 +1,14 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
 from django.db import transaction
-from django.contrib.auth import authenticate, logout
 from django.contrib.auth import login as django_login
-from django.views.decorators.csrf import *
+from django.contrib.auth import logout as django_logout
 from rest_framework.decorators import api_view
 from django_q.tasks import async
 from serializers import *
+from django.core.cache import cache
 import facebook
-import tasks
+import json
 
 
 # Create your views here.
@@ -17,32 +17,22 @@ def login(request):
 	return render(request, 'home.html')
 
 
-def test(request):
-	"""
-	#jan = TweetyUser.objects[0]
-	janusz = TweetyUser()
-	janusz.first_name = 'janusz2'
-	janusz.last_name = 'janusz2'
-	janusz.email = 'janusz2@janusze.pl'
-	janusz.username = 'januszz2'
-	janusz.save()
+def logout(request):
+	if request.user.is_authenticated():
+		django_logout(request)
+		return HttpResponse(status=200)
+	return HttpResponse(status=400)
 
-	#usr = TweetyUser.objects
-	#serializer = TweetyUserSerializer(usr[0])
-	#return JsonResponse(usr[0].to_dict())
 
-	#janusz = TweetyUser.objects[0]
-	#janusz.backend = 'mongoengine.django.auth.MongoEngineBackend'
-	#login(request, janusz)
-	#x = authenticate(username=janusz.username, password=janusz.password)
-
-	#print x
-	"""
-	return HttpResponse(status=200)
+def home(request):
+	if request.user.is_authenticated():
+		return render(request, 'wall.html', context={'user': request.user})
+	else:
+		return redirect('login')
 
 
 def report(request):
-	async(tasks.create_report, sync=True, hook=tasks.report_ready)
+	async('tasks.create_report', hook='tasks.report_ready')
 	return HttpResponse(status=200)
 
 
@@ -118,8 +108,8 @@ def user(request, id):
 @transaction.atomic
 def tweet_getpost(request):
 	if request.method == 'GET':
-		users = Tweet.objects
-		serializer = TweetSerializer(users, many=True)
+		tweets = Tweet.objects.order_by('-date')
+		serializer = TweetSerializer(tweets, many=True)
 		return JsonResponse(serializer.data, safe=False)
 
 	elif request.method == 'POST':
@@ -132,31 +122,25 @@ def tweet_getpost(request):
 			return HttpResponse(status=400)
 
 
-@api_view(['GET', 'PUT', 'DELETE'])
+@api_view(['GET', 'DELETE'])
 @transaction.atomic
 def tweet(request, id):
 	try:
-		tweet = Tweet.objects.filter(id=id)[0]
+		tweet = Tweet.get(id=id)
 	except IndexError, Tweet.DoesNotExist:
 		return HttpResponse(status=404)
 
 	if request.method == 'GET':
-		return JsonResponse(tweet.to_dict())
-
-	elif request.method == 'PUT':
-		serializer = TweetSerializer(data=request.data)
-		if serializer.is_valid():
-			serializer.save(tweet)
-			return HttpResponse(status=201)
-		else:
-			return HttpResponse(status=400)
+		return JsonResponse(tweet)
 
 	elif request.method == 'DELETE':
-		if tweet.author == request.user:
-			tweet.delete()
-			return HttpResponse(status=204)
-		else:
-			return HttpResponse(status=401)
+		id = tweet.get('id', None)
+		if id is not None:
+			tweet = Tweet.objects.get(id=id)
+			if tweet.author == request.user:
+				tweet.delete()
+				return HttpResponse(status=204)
+		return HttpResponse(status=401)
 
 
 @api_view(['GET'])
@@ -164,9 +148,12 @@ def tweet(request, id):
 def wall(request):
 	if request.method == 'GET':
 		if request.user.is_authenticated():
-			tweets = Tweet.objects.filter(author=request.user)
-			serializer = TweetSerializer(tweets, many=True)
-			return JsonResponse(serializer.data, safe=False)
+			tweets_ids = Tweet.objects.filter(author=request.user).values('id').order_by('-date')
+			tweets = []
+			for val in tweets_ids:
+				tweet = Tweet.get(id=val['id'])
+				tweets.append(tweet)
+			return JsonResponse(tweets, safe=False)
 		else:
 			return HttpResponse(status=401)
 	else:
@@ -206,14 +193,37 @@ def retweet(request, id):
 	return HttpResponse(status=400)
 
 
-def home(request):
-	return render(request, 'wall.html')
-
-
 @api_view(['GET'])
 def popular(request):
 	if request.method == 'GET':
-		tweets = Tweet.objects.order_by('-popularity')[:10]
-		serializer = TweetSerializer(tweets, many=True)
-		return JsonResponse(serializer.data, safe=False)
+		popular_ids = cache.get('popular')
+		if popular_ids is None:
+			popular_ids = Tweet.objects.values('id').order_by('-popularity')[:10]
+		else:
+			popular_tweets = json.loads(popular_ids)
+			return JsonResponse(popular_tweets, safe=False)
+		tweets = []
+		for val in popular_ids:
+			tweet = Tweet.get(id=val['id'])
+			tweets.append(tweet)
+		cache.set('popular', json.dumps(tweets), 3)
+		return JsonResponse(tweets, safe=False)
+	return HttpResponse(status=400)
+
+
+@api_view(['GET'])
+def newest(request):
+	if request.method == 'GET':
+		newest_ids = cache.get('newest')
+		if newest_ids is None:
+			newest_ids = Tweet.objects.values('id').order_by('-date')[:10]
+		else:
+			newest_tweets = json.loads(newest_ids)
+			return JsonResponse(newest_tweets, safe=False)
+		tweets = []
+		for val in newest_ids:
+			tweet = Tweet.get(id=val['id'])
+			tweets.append(tweet)
+		cache.set('newest', json.dumps(tweets), 3)
+		return JsonResponse(tweets, safe=False)
 	return HttpResponse(status=400)

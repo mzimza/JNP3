@@ -22,8 +22,7 @@ class CachingModel(Model):
 
 	@classmethod
 	def __cache_get(cls, **kwargs):
-		dictionary = get(cls.__make_cache_key_c(kwargs['id']), cls.objects.get, **kwargs)
-		obj = cls.fromDict(**dictionary)
+		obj = get(cls.__make_cache_key_c(kwargs['id']), cls.objects.get, **kwargs)
 		return obj
 
 	def __cache_remove(self):
@@ -36,7 +35,6 @@ class CachingModel(Model):
 		return cls.objects.get(*args, **kwargs)
 
 	def save(self, *args, **kwargs):
-		print "caching model save"
 		ret = super(CachingModel, self).save(*args, **kwargs)
 		self.__cache_set()
 		return ret
@@ -61,11 +59,11 @@ def date_handler(obj):
 def get(name, to_evaluate, *args, **kwargs):
 	return_val = cache.get(name)
 	if return_val is None:
-		return_val = to_evaluate(*args, **kwargs).to_dict()
-		cache.set(name, return_val.serializer.data)
+		return_val = to_evaluate(*args, **kwargs)
+		cache.set(name, return_val.serializer.data, 60)
+		return return_val.to_dict()
 	else:
-		return_val = json.loads(return_val)
-	return return_val
+		return return_val
 
 
 def _set(name, value):

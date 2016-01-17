@@ -23,9 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'p3ws_1(9e$hei^ur-%qc-u4z()hzz+gmuktni0b8@34-6$7$8%'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
+DEBUG = False
 
 # Application definition
 
@@ -36,15 +34,17 @@ INSTALLED_APPS = [
 	'django.contrib.sessions',
 	'django.contrib.messages',
 	'django.contrib.staticfiles',
+	'django_q',
 	'rest_framework',
 	'rest_framework_mongoengine',
 	'tweety',
-	'django_q',
-	'debug_toolbar'
+	'favicon',
+	#'debug_toolbar'
 ]
 
 MIDDLEWARE_CLASSES = [
-	'debug_toolbar.middleware.DebugToolbarMiddleware',
+	'django.middleware.gzip.GZipMiddleware',
+	#'debug_toolbar.middleware.DebugToolbarMiddleware',
 	'django.middleware.security.SecurityMiddleware',
 	'django.contrib.sessions.middleware.SessionMiddleware',
 	'django.middleware.common.CommonMiddleware',
@@ -53,6 +53,9 @@ MIDDLEWARE_CLASSES = [
 	'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
 	'django.contrib.messages.middleware.MessageMiddleware',
 	'django.middleware.clickjacking.XFrameOptionsMiddleware',
+	'django.middleware.cache.UpdateCacheMiddleware',
+	'django.middleware.common.CommonMiddleware',
+    'django.middleware.cache.FetchFromCacheMiddleware',
 ]
 
 ROOT_URLCONF = 'jnp3.urls'
@@ -96,9 +99,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/1.9/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'pl-pl'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Warsaw'
 
 USE_I18N = True
 
@@ -141,26 +144,20 @@ REST_FRAMEWORK = {
 
 AUTHENTICATION_BACKENDS = (
 	'django.contrib.auth.backends.ModelBackend',
-	# 'server.libs.facebook.FacebookBackend',
 )
 
 AUTH_USER_MODEL = 'tweety.TweetyUser'
 
 # DJANGO-Q SETTINGS
 Q_CLUSTER = {
-	'name': 'tweety_async',
-	'workers': 4,
-	'recycle': 500,
-	'timeout': 60,
-	'compress': False,
-	'save_limit': 250,
-	'queue_limit': 500,
-	'cpu_affinity': 1,
+	'name': 'default',
+	'workers': 2,
 	'label': 'Django Q',
 	'redis': {
 		'host': '127.0.0.1',
 		'port': 6379,
-		'db': 0,}
+		'db': 0,
+	}
 }
 
 
@@ -174,7 +171,7 @@ CACHES = {
 
 # DEBUG_TOOLBAR
 DEBUG_TOOLBAR_PANELS = [
-    'debug_toolbar.panels.versions.VersionsPanel',
+	'debug_toolbar.panels.versions.VersionsPanel',
     'debug_toolbar.panels.timer.TimerPanel',
     'debug_toolbar.panels.settings.SettingsPanel',
     'debug_toolbar.panels.headers.HeadersPanel',
@@ -187,3 +184,12 @@ DEBUG_TOOLBAR_PANELS = [
     'debug_toolbar.panels.logging.LoggingPanel',
     'debug_toolbar.panels.redirects.RedirectsPanel',
 ]
+
+# DEPLOYMENT SETTINGS
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_BROWSER_XSS_FILTER = True
+#SESSION_COOKIE_SECURE = True
+#CSRF_COOKIE_SECURE = True
+#CSRF_COOKIE_HTTPONLY = True
+X_FRAME_OPTIONS = 'DENY'
+ALLOWED_HOSTS = ['*']
