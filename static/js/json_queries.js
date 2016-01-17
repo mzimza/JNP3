@@ -137,6 +137,7 @@ var getTweet = function(tweet_id, handler) {
 };
 
 var showTweets = function(host) {
+console.log("showTweets");
     $.ajax({
         url: 'http://' + host + '/wall/',
         type: 'GET',
@@ -144,6 +145,7 @@ var showTweets = function(host) {
             'Content-Type' : 'application/json',
         },
         success: function(data) {
+            console.log("showTweets success");
             $('#tweetBody').empty();
             data.forEach(function(element, index){
                 addRow('tweetBody', element, true, false);

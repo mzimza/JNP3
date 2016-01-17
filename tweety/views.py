@@ -51,7 +51,10 @@ def user_facebook(request):
 					user.save()
 					created = True
 					user_db = TweetyUser.objects.filter(fb_id=user.fb_id)[0]
-				if not request.user.is_authenticated():
+				if user_db == request.user and not request.user.is_authenticated():
+					django_login(request, user_db)
+				elif user_db != request.user:
+					django_logout(request)
 					django_login(request, user_db)
 				if created:
 					return HttpResponse(status=201)
@@ -111,14 +114,14 @@ def tweet_getpost(request):
 		tweets = Tweet.objects.order_by('-date')
 		serializer = TweetSerializer(tweets, many=True)
 		return JsonResponse(serializer.data, safe=False)
-
 	elif request.method == 'POST':
 		serializer = TweetSerializer(data=request.data)
 		if serializer.is_valid():
 			serializer.save(author=request.user)
+			cache_key = 'wall_' + str(request.user.id)
+			cache.delete(cache_key)
 			return HttpResponse(status=201)
 		else:
-			print serializer.errors
 			return HttpResponse(status=400)
 
 
@@ -127,7 +130,7 @@ def tweet_getpost(request):
 def tweet(request, id):
 	try:
 		tweet = Tweet.get(id=id)
-	except IndexError, Tweet.DoesNotExist:
+	except Tweet.DoesNotExist:
 		return HttpResponse(status=404)
 
 	if request.method == 'GET':
@@ -136,28 +139,16 @@ def tweet(request, id):
 	elif request.method == 'DELETE':
 		id = tweet.get('id', None)
 		if id is not None:
-			tweet = Tweet.objects.get(id=id)
-			if tweet.author == request.user:
-				tweet.delete()
-				return HttpResponse(status=204)
+			try:
+				tweet = Tweet.objects.get(id=id)
+				if tweet.author == request.user:
+					tweet.delete()
+					cache_key = 'wall_' + str(request.user.id)
+					cache.delete(cache_key)
+					return HttpResponse(status=204)
+			except Tweet.DoesNotExist:
+				return HttpResponse(status=404)
 		return HttpResponse(status=401)
-
-
-@api_view(['GET'])
-@transaction.atomic
-def wall(request):
-	if request.method == 'GET':
-		if request.user.is_authenticated():
-			tweets_ids = Tweet.objects.filter(author=request.user).values('id').order_by('-date')
-			tweets = []
-			for val in tweets_ids:
-				tweet = Tweet.get(id=val['id'])
-				tweets.append(tweet)
-			return JsonResponse(tweets, safe=False)
-		else:
-			return HttpResponse(status=401)
-	else:
-		return HttpResponse(status=400)
 
 
 @api_view(['POST'])
@@ -187,10 +178,35 @@ def retweet(request, id):
 			new_tweet.author = request.user
 			new_tweet.origin = tweet
 			new_tweet.save()
+			cache_key = 'wall_' + str(request.user.id)
+			cache.delete(cache_key)
 			return HttpResponse(status=201)
 		except IndexError, Tweet.DoesNotExist:
 			pass
 	return HttpResponse(status=400)
+
+
+@api_view(['GET'])
+def wall(request):
+	if request.method == 'GET':
+		if request.user.is_authenticated():
+			cache_key = 'wall_'+str(request.user.id)
+			wall_ids = cache.get(cache_key)
+			if wall_ids is None:
+				wall_ids = Tweet.objects.filter(author=request.user).values('id').order_by('-date')
+			else:
+				wall_tweets = json.loads(wall_ids)
+				return JsonResponse(wall_tweets, safe=False)
+			tweets = []
+			for val in wall_ids:
+				tweet = Tweet.get(id=val['id'])
+				tweets.append(tweet)
+			cache.set(cache_key, json.dumps(tweets), 60)
+			return JsonResponse(tweets, safe=False)
+		else:
+			return HttpResponse(status=401)
+	else:
+		return HttpResponse(status=400)
 
 
 @api_view(['GET'])

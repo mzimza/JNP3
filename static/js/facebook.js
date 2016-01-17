@@ -9,7 +9,6 @@
       // Logged into your app and Facebook.
       var token = response.authResponse.accessToken;
       var host = document.location.host;
-      console.log(host);
       var data = {'token': token};
       $.ajax({
         url: 'http://' + host + '/user_fb/',

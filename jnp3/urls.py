@@ -34,7 +34,7 @@ urlpatterns = [
 	url(r'^tweet/$', cache_page(3)(views.tweet_getpost), name="tweet"),
 	url(r'^tweet/(?P<id>[\d]+)/$', cache_page(1)(views.tweet), name="tweet_id"),
 	url(r'^retweet/(?P<id>[\d]+)/$', cache_page(0)(views.retweet), name="retweet"),
-	url(r'^wall/$', cache_page(3)(views.wall), name="wall"),
+	url(r'^wall/$', cache_page(0)(views.wall), name="wall"),
 	url(r'^like/(?P<id>[\d]+)/$', cache_page(0)(views.like), name="like"),
 	url(r'^home/$', cache_page(0)(views.home)),
 	url(r'^popular/$', cache_page(5)(views.popular), name="popular"),
