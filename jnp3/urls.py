@@ -40,5 +40,5 @@ urlpatterns = [
 	url(r'^popular/$', cache_page(5)(views.popular), name="popular"),
 	url(r'^logout/$', cache_page(0)(views.logout), name="logout"),
 
-	url(r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': os.path.join(BASE_DIR, "static")} )
+	url(r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': os.path.join(BASE_DIR, "static")})
 ]

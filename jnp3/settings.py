@@ -151,7 +151,7 @@ AUTH_USER_MODEL = 'tweety.TweetyUser'
 # DJANGO-Q SETTINGS
 Q_CLUSTER = {
 	'name': 'default',
-	'workers': 2,
+	'workers': 1,
 	'label': 'Django Q',
 	'redis': {
 		'host': '127.0.0.1',
